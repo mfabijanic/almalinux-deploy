@@ -39,6 +39,7 @@ REMOVE_PKGS=("centos-linux-release" "centos-gpg-keys" "centos-linux-repos" \
                 "rocky-obsolete-packages")
 
 is_container=0
+foreman_katello=0
 
 setup_log_files() {
     exec > >(tee /var/log/almalinux-deploy.log)
@@ -116,8 +117,9 @@ report_step_error() {
 show_usage() {
     echo -e 'Migrates an EL system to AlmaLinux\n'
     echo -e 'Usage: almalinux-deploy.sh [OPTION]...\n'
-    echo '  -h, --help           show this message and exit'
-    echo '  -v, --version        print version information and exit'
+    echo '  -h, --help             show this message and exit'
+    echo '  -v, --version          print version information and exit'
+    echo '  -k, --foreman-katello  disable AlmaLinux repositories and use preconfigured in Foreman/Katello'
 }
 
 # Terminates the program if it is not run with root privileges
@@ -519,7 +521,7 @@ migrate_from_centos() {
     remove_os_specific_packages_before_migration
     remove_not_needed_redhat_dirs
     install_almalinux_release_package "${release_path}"
-    detect_foreman
+    [ $foreman_katello -eq 1 ] && detect_foreman
     replace_brand_packages
     save_status_of_stage "migrate_from_centos"
 }
@@ -883,6 +885,9 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         -v | --version)
             echo "${VERSION}"
             exit 0
+            ;;
+        -k | --foreman-katello)
+            foreman_katello=1
             ;;
         -t | --tests)
             exit 0
